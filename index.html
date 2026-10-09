@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>DSA Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="style.css"></head><body><div class="w">
+<h1>DSA Tracker</h1><div class="sub" id="where">Loading…</div>
+<p><button class="btn hide" id="si">Sign in with Google</button></p>
+<div class="pp hide" id="pp"></div><div class="ro-note hide" id="ron"></div>
+<nav id="nav"><button data-v="dash" class="on">Dashboard</button><button data-v="log">Log</button><button data-v="week">Weekly target</button></nav>
+
+<section id="dash">
+ <div class="card"><div class="g" id="stats"></div></div>
+ <div class="card"><h2>This week</h2><div id="thisweek"></div></div>
+ <div class="card"><h2>Last 15 weeks</h2><div class="hm" id="hm"></div></div>
+ <div class="card"><h2>By topic</h2><div id="topics"></div></div>
+ <div class="card"><h2>By platform</h2><div id="plats"></div></div>
+</section>
+
+<section id="log" class="hide">
+ <div class="card edit"><h2>Add a session</h2>
+  <div class="f">
+   <div><label>Date</label><input type="date" id="d"></div>
+   <div><label>Topic</label><input id="t" list="tl" placeholder="e.g. Binary Search"><datalist id="tl"></datalist></div>
+   <div><label>Platform</label><select id="p"><option>LeetCode</option><option>Codeforces</option><option>CodeChef</option><option>GeeksforGeeks</option><option>AtCoder</option><option>HackerRank</option><option>CSES</option><option>Other</option></select></div>
+   <div><label>Difficulty</label><select id="df"><option>Mixed</option><option>Easy</option><option>Medium</option><option>Hard</option></select></div>
+   <div><label>Questions solved</label><input type="number" id="n" min="0" value="1"></div>
+   <div><label>Hours spent</label><input type="number" id="h" min="0" step="0.25" value="1"></div>
+   <div class="full"><label>Question links (one per line)</label><textarea id="l" rows="3" placeholder="https://leetcode.com/problems/..."></textarea></div>
+   <div class="full"><label>Notes / key learning (optional)</label><input id="nt"></div>
+   <div class="full"><label style="display:flex;gap:6px;align-items:center;margin:0"><input type="checkbox" id="rv" style="width:auto"> Needs revision later</label></div>
+  </div>
+  <p><button class="btn" id="add">Add session</button> <span class="sub" id="msg"></span></p>
+ </div>
+ <div class="card"><h2>History</h2><div class="sc" id="hist"></div></div>
+ <div class="card edit"><h2>Backup</h2><p class="sub">Download a copy of your data or restore one.</p>
+  <button class="btn s" id="exp">Export JSON</button> <button class="btn s" id="imp">Import JSON</button><input type="file" id="fi" accept=".json" class="hide"></div>
+</section>
+
+<section id="week" class="hide">
+ <div class="card edit"><h2>Set target for this week</h2>
+  <div class="f"><div><label>Questions to solve this week</label><input type="number" id="wt" min="0"></div></div>
+  <p><button class="btn" id="sw">Save target</button> <span class="sub">Carries forward to later weeks until you change it.</span></p></div>
+ <div class="card"><h2>Past weeks</h2><div class="sc" id="wk"></div></div>
+</section>
+</div>
+<script src="config.js"></script>
+<script src="app.js"></script></body></html>
