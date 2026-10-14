@@ -26,3 +26,5 @@ a{color:var(--ac)}.x{background:none;border:0;color:var(--mut);cursor:pointer}
 .tb{display:flex;align-items:center;gap:8px;font-size:13px;margin:5px 0}.tb span:first-child{width:110px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tb .bar{flex:1}
 .pp{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 0}.pp button{padding:6px 12px;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:16px;cursor:pointer;font:inherit;font-size:13px}.pp button.on{border-color:var(--ac);background:var(--ac2)}.ro .edit,.ro .x{display:none!important}.ro-note{background:var(--ac2);border-radius:8px;padding:8px 12px;font-size:13px;margin-top:10px}
 .ok{color:var(--ac)}.no{color:var(--wr)}.hide{display:none}
+
+.fv #nav,.fv #log,.fv #week{display:none!important}.fv #dash .card:not(.keep){display:none}

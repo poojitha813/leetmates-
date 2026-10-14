@@ -1,12 +1,12 @@
 # DSA Tracker
 
-A small shared tracker for two people practising DSA. Each person logs their own sessions and can view the other's progress **read-only**, updated live. No rankings or comparisons.
+A small shared tracker for two people practising DSA. Each person logs their own sessions. The other person sees only your **streak and activity heatmap** (read-only, live) - never your topics, links, notes or hours. No rankings or comparisons.
 
 ## Features
 - Log sessions: topic, platform, difficulty, questions solved, question links, hours, notes, "needs revision" flag
 - Weekly target vs. questions actually solved (weeks run Mon-Sun, target carries forward)
 - Daily streak (current and longest), activity heatmap, totals by topic and platform
-- Live read-only view of your friend's tracker; only the owner can edit theirs
+- Live read-only view of your friend's streak and heatmap only; your full tracker stays private
 - JSON export/import for backups
 - Works offline (browser storage) until Firebase is configured
 
@@ -50,5 +50,5 @@ Send the link to your friend. You both sign in with Google; her name then appear
 
 ## Notes
 - Firebase web config values are not secrets; access is protected by the rules above. Keep the email allowlist up to date.
-- Data lives in Firestore under `trackers/<user id>`; each person can only write their own document.
+- Full data lives in `trackers/<user id>` (readable and writable only by its owner). A small summary (name + questions solved per day) lives in `summaries/<user id>` for the friend's view.
 - Local run: serve the folder (e.g. `python3 -m http.server`) and open http://localhost:8000. Add `localhost` to Authorized domains for sign-in to work locally.

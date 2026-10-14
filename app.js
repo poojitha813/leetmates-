@@ -23,6 +23,7 @@ async function load(){
   }catch(e){$('where').textContent='Could not load sync ('+e.message+'). Working offline in this browser.'}
 }
 function signedOut(){uid=null;$('si').classList.remove('hide');$('pp').classList.add('hide');$('where').textContent='Sign in with Google to sync and see your friend\'s progress.'}
+const summary=()=>{const days={};MINE.entries.forEach(e=>{if(e.count>0)days[e.date]=(days[e.date]||0)+e.count});return{name:uname,days,updated:Date.now()}};
 async function start(u){
   uid=u.uid;uname=u.displayName||u.email;$('si').classList.add('hide');
   const {fs,db}=FB,me=fs.doc(db,'trackers',uid);
@@ -30,10 +31,11 @@ async function start(u){
     const s=await fs.getDoc(me);
     if(s.exists()){S=norm(JSON.parse(s.data().json));MINE=S}
     else{await fs.setDoc(me,{name:uname,json:JSON.stringify(MINE),updated:Date.now()})}
-    $('where').textContent='Signed in as '+uname+' · live sync on · only you can edit your tracker.';
+    await fs.setDoc(fs.doc(db,'summaries',uid),summary());
+    $('where').textContent='Signed in as '+uname+' · live sync on · your friend sees only your streak and activity heatmap.';
     render();
-    fs.onSnapshot(fs.collection(db,'trackers'),snap=>{
-      others={};snap.forEach(d=>{if(d.id!==uid){const x=d.data();try{others[d.id]={name:x.name||'Friend',data:norm(JSON.parse(x.json))}}catch(e){}}});
+    fs.onSnapshot(fs.collection(db,'summaries'),snap=>{
+      others={};snap.forEach(d=>{if(d.id!==uid){const x=d.data();others[d.id]={name:x.name||'Friend',data:norm({entries:Object.entries(x.days||{}).map(([date,count],i)=>({id:i,date,count,hours:0,topic:'',platform:'',diff:'',links:[],notes:'',rev:false}))})}}});
       if(viewing&&!others[viewing])viewing=null;
       peopleBar();if(viewing){S=others[viewing].data;render()}
     },e=>$('where').textContent='Cannot read friend data: '+e.message);
@@ -46,13 +48,13 @@ function peopleBar(){
 }
 function showPerson(id){
   viewing=id&&others[id]?id:null;
-  if(viewing){S=others[viewing].data;document.body.classList.add('ro');$('ron').textContent='Viewing '+others[viewing].name+"'s tracker — read-only, updates live.";$('ron').classList.remove('hide')}
-  else{S=MINE;document.body.classList.remove('ro');$('ron').classList.add('hide')}
+  if(viewing){S=others[viewing].data;document.body.classList.add('ro','fv');document.querySelector('#nav button[data-v=dash]').click();$('ron').textContent='Viewing '+others[viewing].name+"'s streak and activity only — updates live.";$('ron').classList.remove('hide')}
+  else{S=MINE;document.body.classList.remove('ro','fv');$('ron').classList.add('hide')}
   peopleBar();render();
 }
 let tm;function save(){if(S!==MINE)return;clearTimeout(tm);tm=setTimeout(async()=>{const json=JSON.stringify(S);
   try{localStorage.setItem('dsa',json)}catch(e){}
-  try{if(FB&&uid)await FB.fs.setDoc(FB.fs.doc(FB.db,'trackers',uid),{name:uname,json,updated:Date.now()})}catch(e){$('where').textContent='Could not sync: '+e.message}},300)}
+  try{if(FB&&uid){await FB.fs.setDoc(FB.fs.doc(FB.db,'trackers',uid),{name:uname,json,updated:Date.now()});await FB.fs.setDoc(FB.fs.doc(FB.db,'summaries',uid),summary())}}catch(e){$('where').textContent='Could not sync: '+e.message}},300)}
 
 /* calc */
 const solvedOn=()=>{const m={};S.entries.forEach(e=>m[e.date]=(m[e.date]||0)+e.count);return m};
@@ -78,7 +80,7 @@ function bars(map,total){const k=Object.keys(map).sort((a,b)=>map[b]-map[a]);
 function render(){
   const st=streaks(),tot=S.entries.reduce((a,e)=>a+e.count,0),hrs=S.entries.reduce((a,e)=>a+e.hours,0);
   const days=new Set(S.entries.filter(e=>e.count>0).map(e=>e.date)).size;
-  $('stats').innerHTML=[[st.cur+(st.cur?' 🔥':''),'Current streak (days)'],[st.best,'Longest streak'],[tot,'Questions solved'],[hrs.toFixed(1),'Hours spent'],[days,'Active days'],[tot&&hrs?(tot/hrs).toFixed(1):'–','Questions / hour']].map(x=>`<div class="st"><b>${x[0]}</b><span>${x[1]}</span></div>`).join('');
+  $('stats').innerHTML=[[st.cur+(st.cur?' 🔥':''),'Current streak (days)'],[st.best,'Longest streak'],[tot,'Questions solved'],[hrs.toFixed(1),'Hours spent'],[days,'Active days'],[tot&&hrs?(tot/hrs).toFixed(1):'–','Questions / hour']].slice(0,document.body.classList.contains('fv')?2:6).map(x=>`<div class="st"><b>${x[0]}</b><span>${x[1]}</span></div>`).join('');
   const ws=wstart(today()),tg=targetFor(ws),sv=solvedWeek(ws),pc=tg?Math.min(100,sv/tg*100):100;
   $('thisweek').innerHTML=`<div style="display:flex;justify-content:space-between"><span><b>${sv}</b> of ${tg} solved</span><span class="sub">${hoursWeek(ws).toFixed(1)} h</span></div><div class="bar" style="margin:8px 0"><i style="width:${pc}%"></i></div><div class="sub">${sv>=tg?'Target hit 🎉':(tg-sv)+' to go this week'}${st.doneToday?'':' · log something today to keep your streak'}</div>`;
   // heatmap
