@@ -1,15 +1,14 @@
 rules_version = '2';
 service cloud.firestore {
-  match /databases/{database}/documents {
-
+  match /databases/{db}/documents {
+    // Replace with the Google accounts that may use the tracker.
     function allowed() {
       return request.auth != null
-        && request.auth.token.email in ['24bcs132@iiitdwd.ac.in', '24bcs066@iiitdwd.ac.in'];
+        && request.auth.token.email in ['you@gmail.com', 'friend@gmail.com'];
     }
-
+    // Each person's tracker is private: only its owner can read or write it.
     match /trackers/{uid} {
-      allow read: if allowed();
-      allow write: if allowed() && request.auth.uid == uid;
+      allow read, write: if allowed() && request.auth.uid == uid;
     }
   }
 }

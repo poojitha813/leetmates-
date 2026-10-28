@@ -8,7 +8,7 @@ const wstart=s=>{const d=parse(s);d.setDate(d.getDate()-((d.getDay()+6)%7));retu
 const today=()=>fmt(new Date());
 let S={entries:[],targets:{},def:10};
 const FV='10.12.2',CDN='https://www.gstatic.com/firebasejs/'+FV+'/';
-let MINE=S,FB=null,uid=null,uname='',others={},viewing=null;
+let MINE=S,FB=null,uid=null,uname='';
 const norm=o=>{o.entries=o.entries||[];o.targets=o.targets||{};o.def=o.def??10;return o};
 
 async function load(){
@@ -22,8 +22,7 @@ async function load(){
     signedOut();au.onAuthStateChanged(auth,u=>u?start(u):signedOut());
   }catch(e){$('where').textContent='Could not load sync ('+e.message+'). Working offline in this browser.'}
 }
-function signedOut(){uid=null;$('si').classList.remove('hide');$('pp').classList.add('hide');$('where').textContent='Sign in with Google to sync and see your friend\'s progress.'}
-const summary=()=>{const days={};MINE.entries.forEach(e=>{if(e.count>0)days[e.date]=(days[e.date]||0)+e.count});return{name:uname,days,updated:Date.now()}};
+function signedOut(){uid=null;$('si').classList.remove('hide');$('where').textContent='Sign in with Google to sync your tracker across devices.'}
 async function start(u){
   uid=u.uid;uname=u.displayName||u.email;$('si').classList.add('hide');
   const {fs,db}=FB,me=fs.doc(db,'trackers',uid);
@@ -31,30 +30,13 @@ async function start(u){
     const s=await fs.getDoc(me);
     if(s.exists()){S=norm(JSON.parse(s.data().json));MINE=S}
     else{await fs.setDoc(me,{name:uname,json:JSON.stringify(MINE),updated:Date.now()})}
-    await fs.setDoc(fs.doc(db,'summaries',uid),summary());
-    $('where').textContent='Signed in as '+uname+' · live sync on · your friend sees only your streak and activity heatmap.';
+    $('where').textContent='Signed in as '+uname+' · live sync on · your tracker is private to you.';
     render();
-    fs.onSnapshot(fs.collection(db,'summaries'),snap=>{
-      others={};snap.forEach(d=>{if(d.id!==uid){const x=d.data();others[d.id]={name:x.name||'Friend',data:norm({entries:Object.entries(x.days||{}).map(([date,count],i)=>({id:i,date,count,hours:0,topic:'',platform:'',diff:'',links:[],notes:'',rev:false}))})}}});
-      if(viewing&&!others[viewing])viewing=null;
-      peopleBar();if(viewing){S=others[viewing].data;render()}
-    },e=>$('where').textContent='Cannot read friend data: '+e.message);
   }catch(e){$('where').textContent='Sync error: '+e.message+' (check your Firestore rules).'}
 }
-function peopleBar(){
-  const ids=Object.keys(others);
-  $('pp').innerHTML='<button class="'+(viewing?'':'on')+'" data-p="">My tracker</button>'+ids.map(i=>`<button class="${viewing===i?'on':''}" data-p="${esc(i)}">${esc(others[i].name)}</button>`).join('');
-  $('pp').classList.remove('hide');
-}
-function showPerson(id){
-  viewing=id&&others[id]?id:null;
-  if(viewing){S=others[viewing].data;document.body.classList.add('ro','fv');document.querySelector('#nav button[data-v=dash]').click();$('ron').textContent='Viewing '+others[viewing].name+"'s streak and activity only — updates live.";$('ron').classList.remove('hide')}
-  else{S=MINE;document.body.classList.remove('ro','fv');$('ron').classList.add('hide')}
-  peopleBar();render();
-}
-let tm;function save(){if(S!==MINE)return;clearTimeout(tm);tm=setTimeout(async()=>{const json=JSON.stringify(S);
+let tm;function save(){clearTimeout(tm);tm=setTimeout(async()=>{const json=JSON.stringify(S);
   try{localStorage.setItem('dsa',json)}catch(e){}
-  try{if(FB&&uid){await FB.fs.setDoc(FB.fs.doc(FB.db,'trackers',uid),{name:uname,json,updated:Date.now()});await FB.fs.setDoc(FB.fs.doc(FB.db,'summaries',uid),summary())}}catch(e){$('where').textContent='Could not sync: '+e.message}},300)}
+  try{if(FB&&uid){await FB.fs.setDoc(FB.fs.doc(FB.db,'trackers',uid),{name:uname,json,updated:Date.now()})}}catch(e){$('where').textContent='Could not sync: '+e.message}},300)}
 
 /* calc */
 const solvedOn=()=>{const m={};S.entries.forEach(e=>m[e.date]=(m[e.date]||0)+e.count);return m};
@@ -80,7 +62,7 @@ function bars(map,total){const k=Object.keys(map).sort((a,b)=>map[b]-map[a]);
 function render(){
   const st=streaks(),tot=S.entries.reduce((a,e)=>a+e.count,0),hrs=S.entries.reduce((a,e)=>a+e.hours,0);
   const days=new Set(S.entries.filter(e=>e.count>0).map(e=>e.date)).size;
-  $('stats').innerHTML=[[st.cur+(st.cur?' 🔥':''),'Current streak (days)'],[st.best,'Longest streak'],[tot,'Questions solved'],[hrs.toFixed(1),'Hours spent'],[days,'Active days'],[tot&&hrs?(tot/hrs).toFixed(1):'–','Questions / hour']].slice(0,document.body.classList.contains('fv')?2:6).map(x=>`<div class="st"><b>${x[0]}</b><span>${x[1]}</span></div>`).join('');
+  $('stats').innerHTML=[[st.cur+(st.cur?' 🔥':''),'Current streak (days)'],[st.best,'Longest streak'],[tot,'Questions solved'],[hrs.toFixed(1),'Hours spent'],[days,'Active days'],[tot&&hrs?(tot/hrs).toFixed(1):'–','Questions / hour']].map(x=>`<div class="st"><b>${x[0]}</b><span>${x[1]}</span></div>`).join('');
   const ws=wstart(today()),tg=targetFor(ws),sv=solvedWeek(ws),pc=tg?Math.min(100,sv/tg*100):100;
   $('thisweek').innerHTML=`<div style="display:flex;justify-content:space-between"><span><b>${sv}</b> of ${tg} solved</span><span class="sub">${hoursWeek(ws).toFixed(1)} h</span></div><div class="bar" style="margin:8px 0"><i style="width:${pc}%"></i></div><div class="sub">${sv>=tg?'Target hit 🎉':(tg-sv)+' to go this week'}${st.doneToday?'':' · log something today to keep your streak'}</div>`;
   // heatmap
@@ -119,6 +101,5 @@ $('exp').onclick=async()=>{const data=JSON.stringify(S,null,2),name='dsa-tracker
 $('imp').onclick=()=>$('fi').click();
 $('fi').onchange=async e=>{try{const j=JSON.parse(await e.target.files[0].text());if(!Array.isArray(j.entries))throw 0;
   if(confirm('Replace current data with this backup?')){S=MINE=j;S.targets=S.targets||{};S.def=S.def??10;save();render()}}catch(x){alert('That file is not a valid backup.')}};
-$('pp').onclick=e=>{const b=e.target.closest('button');if(b)showPerson(b.dataset.p)};
 $('d').value=today();
 load().then(render);

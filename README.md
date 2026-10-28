@@ -1,12 +1,12 @@
 # DSA Tracker
 
-A small shared tracker for two people practising DSA. Each person logs their own sessions. The other person sees only your **streak and activity heatmap** (read-only, live) - never your topics, links, notes or hours. No rankings or comparisons.
+A small shared tracker for two people practising DSA. Each person logs their own sessions in a private tracker. Nothing is shared between users: no streaks, heatmaps, topics or notes.
 
 ## Features
 - Log sessions: topic, platform, difficulty, questions solved, question links, hours, notes, "needs revision" flag
 - Weekly target vs. questions actually solved (weeks run Mon-Sun, target carries forward)
 - Daily streak (current and longest), activity heatmap, totals by topic and platform
-- Live read-only view of your friend's streak and heatmap only; your full tracker stays private
+- Fully private: each person can only see their own tracker
 - JSON export/import for backups
 - Works offline (browser storage) until Firebase is configured
 
@@ -46,9 +46,9 @@ Then repo **Settings -> Pages -> Deploy from branch -> main / (root)**. Your lin
 ## After deploying
 Add your site's domain (e.g. `<you>.github.io`) under Firebase -> Authentication -> Settings -> **Authorized domains**, otherwise Google sign-in will be blocked.
 
-Send the link to your friend. You both sign in with Google; her name then appears as a button at the top of your page, and yours on hers.
+Send the link to your friend. You both sign in with Google and each see only your own tracker.
 
 ## Notes
 - Firebase web config values are not secrets; access is protected by the rules above. Keep the email allowlist up to date.
-- Full data lives in `trackers/<user id>` (readable and writable only by its owner). A small summary (name + questions solved per day) lives in `summaries/<user id>` for the friend's view.
+- Data lives in `trackers/<user id>`, readable and writable only by its owner.
 - Local run: serve the folder (e.g. `python3 -m http.server`) and open http://localhost:8000. Add `localhost` to Authorized domains for sign-in to work locally.
